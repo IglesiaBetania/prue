@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Contacto - Demo</title>
+  <style>
+    body { font-family: sans-serif; max-width: 400px; margin: 40px auto; padding: 20px; }
+    form { display: flex; flex-direction: column; gap: 12px; }
+    input, textarea, button { padding: 10px; font-size: 14px; }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
+    button:disabled { background: #ccc; }
+    .status { margin-top: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h2>Envíanos un mensaje</h2>
+  
+  <form id="contactForm">
+    <input type="text" id="nombre" placeholder="Tu Nombre" required />
+    <input type="email" id="email" placeholder="Tu Correo" required />
+    <textarea id="mensaje" placeholder="Tu Mensaje" rows="4" required></textarea>
+    <button type="submit" id="btnEnviar">Enviar</button>
+  </form>
+
+  <div id="status" class="status"></div>
+
+  <script>
+    // Reemplaza esta URL con la que te dio Google Apps Script en el despliegue
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlnYW1LIT53o2meoEExauK4OgfN8A9Uh89x0aitE17PsJUhvKOIhoWM2MteN8IVISsQQ/exec";
+
+    const form = document.getElementById("contactForm");
+    const statusDiv = document.getElementById("status");
+    const btn = document.getElementById("btnEnviar");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      btn.disabled = true;
+      statusDiv.textContent = "Enviando...";
+
+      const data = {
+        nombre: document.getElementById("nombre").value,
+        email: document.getElementById("email").value,
+        mensaje: document.getElementById("mensaje").value
+      };
+
+      try {
+        // Petición a Apps Script mediante 'text/plain' para evitar problemas de CORS
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.result === "success") {
+          statusDiv.style.color = "green";
+          statusDiv.textContent = "¡Datos guardados con éxito en Google Sheets!";
+          form.reset();
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (err) {
+        statusDiv.style.color = "red";
+        statusDiv.textContent = "Error al enviar los datos.";
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+
+</body>
+</html>
